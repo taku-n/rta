@@ -12,22 +12,12 @@ pub extern "C" fn sma_c(
     let mut dest = unsafe {slice::from_raw_parts_mut(p_dest, n)};
     let src = unsafe {slice::from_raw_parts(p_src, n)};
 
-    sma(dest, src, period);
+    base::move_v2s(dest, sma(src, period));
 }
 
-fn sma(dest: &mut [f64], src: &[f64], period: usize) {
-// The size of two slices must be same or panic.
-
-    //mem::swap(dest,
-    //        base::window_over_zero(src, period).to_vec().into_iter()
-    //        .map(|x| base::average(&x))
-    //        .collect::<Vec<_>>().get_mut(..).unwrap());
-    // E0277: size for values of type [f64] cannot be known at compilation time
-    // help: the trait `std::marker::Sized` is not implemented for `[f64]`
-    // note: required by `std::mem::swap`
-
-    let v = base::window_over_zero(src, period).to_vec().into_iter()
-            .map(|x| base::average(&x)).collect::<Vec<_>>();
+fn sma(s: &[f64], period: usize) -> Vec<f64> {
+    base::window_over_zero(s, period).into_iter()
+            .map(|x| base::average(&x)).collect::<Vec<_>>()
 }
 
 #[cfg(test)]
@@ -35,6 +25,10 @@ mod tests {
     use crate::*;
 
     #[test]
-    fn it_works() {
+    fn sma_test() {
+        let array = [1.0, 2.0, 3.0, 4.0, 5.0];
+        let s = &array[..];
+
+        assert_eq!(sma(s, 3), [0.3333333333333333, 1.0, 2.0, 3.0, 4.0]);
     }
 }
