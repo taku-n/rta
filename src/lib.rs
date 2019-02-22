@@ -7,8 +7,8 @@ use std::mem;
 use std::slice;
 
 #[no_mangle]
-pub extern "C" fn sma_c(
-        p_dest: *mut f64, p_src: *const f64, n: usize, period: usize) {
+pub extern "C" fn sma_c(p_dest: *mut f64, p_src: *const f64, n: usize,
+        period: usize, begin: usize) {
 
     //dbg::str(&format!("p_src => {:?}", p_src));
     //dbg::str(&format!("p_src (ptr) => {:p}", p_src));
@@ -18,12 +18,23 @@ pub extern "C" fn sma_c(
 
     //dbg::s_f64(&src[..10]);
 
+    let data = &src[(begin - period + 1)..];
+    let sma = sma(data, period);
+    let sma = &sma[sma.len() - (src.len() - begin)..];
+
     base::move_v2s(dest, sma(src, period));
 }
 
-fn sma(s: &[f64], period: usize) -> Vec<f64> {
-    base::window_over_zero(s, period).into_iter()
-            .map(|x| base::average(&x)).collect::<Vec<_>>()
+fn sma(s: &[f64], period: usize, begin: usize) -> Vec<f64> {
+    if begin < period - 1 {
+        base::window_over_zero(s, period).into_iter().skip(begin)
+                .map(|x| base::average(&x)).collect::<Vec<_>>()
+    } else {
+        let data = &s[(begin - period + 1)..];
+
+        base::window(data, period).into_iter()
+                .map(|x| base::average(&x)).collect::<Vec<_>>()
+    }
 }
 
 #[cfg(test)]

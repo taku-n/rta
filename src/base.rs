@@ -17,6 +17,15 @@ pub fn window(s: &[f64], period: usize) -> Vec<Vec<f64>> {
     v
 }
 
+pub fn window_zero(s: &[f64], period: usize) -> Vec<Vec<f64>> {
+// (1 2 3 4 5) => ((0) (0) (1 2 3) (2 3 4) (3 4 5))
+
+    let mut v = vec![vec![0.0]; period - 1];
+    v.extend(window(s, period));
+
+    v
+}
+
 pub fn window_over(s: &[f64], period: usize) -> Vec<Vec<f64>> {
 // (1 2 3 4 5) => ((1) (1 2) (1 2 3) (2 3 4) (3 4 5))
 
@@ -39,13 +48,17 @@ pub fn window_over(s: &[f64], period: usize) -> Vec<Vec<f64>> {
 pub fn window_over_zero(s: &[f64], period: usize) -> Vec<Vec<f64>> {
 // (1 2 3 4 5) => ((0 0 1) (0 1 2) (1 2 3) (2 3 4) (3 4 5))
 
-    let mut t = vec![0.0; period - 1];
-    t.extend(s);
+    let mut v = vec![0.0; period - 1];
+    v.extend(s);
 
-    window(&t, period)
+    window(&v, period)
 }
 
 pub fn average(s: &[f64]) -> f64 {
+//  x_1     x_2     x_3           x_n
+// ----- + ----- + ----- + ... + -----
+//   n       n       n             n
+
     s.iter().fold(0.0, |acc, x| acc + x / s.len() as f64)
 }
 
@@ -68,6 +81,13 @@ mod tests {
     fn window_test() {
         assert!(window(&[1.0, 2.0, 3.0, 4.0, 5.0], 3)
                 == [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]]);
+    }
+
+    #[test]
+    fn window_zero_test() {
+        assert_eq!(window_zero(&[1.0, 2.0, 3.0, 4.0, 5.0], 3),
+                [vec![0.0], vec![0.0],
+                vec![1.0, 2.0, 3.0], vec![2.0, 3.0, 4.0], vec![3.0, 4.0, 5.0]]);
     }
 
     #[test]
