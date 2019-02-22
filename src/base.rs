@@ -1,6 +1,15 @@
-pub fn move_v2s(s_dst: &mut [f64], v_src: Vec<f64>) {
+pub fn move_v2s(s_dst: &mut [f64], v_src: Vec<f64>, begin: usize) {
+// src               O O O
+//                   | | |
+//                   V V V
+// dst O O O O O O O O O O
+//                  /
+//             begin
+//
+// For complete copying, begin is zero.
+
     for (i, x) in v_src.into_iter().enumerate() {
-        s_dst[i] = x;
+        s_dst[begin + i] = x;
     }
 }
 
@@ -68,13 +77,13 @@ mod tests {
 
     #[test]
     fn move_v2s_test() {
-        let v_src = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let v_src = vec![1.0, 2.0, 3.0, 4.0];
         let mut array = [0.0; 8];
         let mut s_dst = &mut array[..];
 
-        move_v2s(&mut s_dst, v_src);
+        move_v2s(&mut s_dst, v_src, 2);
 
-        assert_eq!(s_dst, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        assert_eq!(s_dst, [0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0]);
     }
 
     #[test]

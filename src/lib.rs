@@ -3,26 +3,18 @@
 mod base;
 mod dbg;
 
-use std::mem;
 use std::slice;
 
 #[no_mangle]
-pub extern "C" fn sma_c(p_dest: *mut f64, p_src: *const f64, n: usize,
+pub extern "C" fn sma_c(p_dst: *mut f64, p_src: *const f64, n: usize,
         period: usize, begin: usize) {
 
-    //dbg::str(&format!("p_src => {:?}", p_src));
-    //dbg::str(&format!("p_src (ptr) => {:p}", p_src));
-
-    let mut dest = unsafe {slice::from_raw_parts_mut(p_dest, n)};
+    let mut dst = unsafe {slice::from_raw_parts_mut(p_dst, n)};
     let src = unsafe {slice::from_raw_parts(p_src, n)};
 
-    //dbg::s_f64(&src[..10]);
+    let sma = sma(src, period, begin);
 
-    let data = &src[(begin - period + 1)..];
-    let sma = sma(data, period);
-    let sma = &sma[sma.len() - (src.len() - begin)..];
-
-    base::move_v2s(dest, sma(src, period));
+    base::move_v2s(dst, sma, begin);
 }
 
 fn sma(s: &[f64], period: usize, begin: usize) -> Vec<f64> {
@@ -30,7 +22,10 @@ fn sma(s: &[f64], period: usize, begin: usize) -> Vec<f64> {
         base::window_over_zero(s, period).into_iter().skip(begin)
                 .map(|x| base::average(&x)).collect::<Vec<_>>()
     } else {
-        let data = &s[(begin - period + 1)..];
+        let data = &s[(1 + begin - period)..];
+        // This calculation order avoids "attempt to subtract with overflow".
+        // If you calculate (begin - period + 1), you get an error of that.
+        // The value can not be a negative value if only temporarily.
 
         base::window(data, period).into_iter()
                 .map(|x| base::average(&x)).collect::<Vec<_>>()
@@ -46,6 +41,7 @@ mod tests {
         let array = [1.0, 2.0, 3.0, 4.0, 5.0];
         let s = &array[..];
 
-        assert_eq!(sma(s, 3), [0.3333333333333333, 1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(sma(s, 3, 0), [0.3333333333333333, 1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(sma(s, 3, 2), [2.0, 3.0, 4.0]);
     }
 }
