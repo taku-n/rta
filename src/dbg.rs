@@ -7,6 +7,7 @@ use std::net::TcpStream;
 
 const ADDR_PORT: &str = "127.0.0.1:9841";
 
+#[cfg(debug_assertions)]
 pub fn dbg<T>(t: T)
         where T: Debug {
     let stream = TcpStream::connect(ADDR_PORT);
@@ -20,6 +21,11 @@ pub fn dbg<T>(t: T)
 
     let msg = format!("{:?}", t);  // Should this be a CString?
     stream.write(msg.as_bytes());
+}
+
+#[cfg(not(debug_assertions))]
+pub fn dbg<T>(t: T)
+        where T: Debug {
 }
 
 pub fn str(s: &str) {
